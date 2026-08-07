@@ -5,6 +5,6 @@ A lightweight library for C
 ## Implementation objectives
 
 - [x] coroutines
-- [ ] dynamic arrays
+- [x] dynamic arrays
 - [ ] strings
 - [ ] map

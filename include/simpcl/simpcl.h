@@ -6,5 +6,6 @@
 #include "types.h"
 #include "coroutine.h"
 #include "misc.h"
+#include "array.h"
 
 #endif
