@@ -26,7 +26,7 @@ typedef struct scl_coroutine_message {
 struct scl_coroutine_t;
 typedef struct scl_coroutine_t {
     char status; // r = running, c = closed, s = sleeping
-    uint64_t wake_at; // wake if time > wake_at (in ms)
+    size_t wake_at; // wake if time > wake_at (in ms)
     ucontext_t ctx;
     void *stack;
     void (*routine)();
@@ -89,8 +89,8 @@ bool_t scl_coroutine_scheduler() {
 
     while (true) {
         bool_t next_coroutine_find = false;
-        uint64_t sleep_time = 0xFFFFFFFFFFFFFFFF;
-        uint64_t current_time = scl_ms();
+        size_t sleep_time = 0xFFFFFFFF;
+        size_t current_time = scl_ms();
 
         for (uint16_t i = 0; i < MAX_COROUTINES; i++) {
             uint16_t index = (curr_index + i + 1) % MAX_COROUTINES;
@@ -102,7 +102,7 @@ bool_t scl_coroutine_scheduler() {
                 if (current_time >= c->wake_at) {
                     c->status = 'r';
                 } else {
-                    uint64_t diff = c->wake_at - current_time;
+                    size_t diff = c->wake_at - current_time;
                     sleep_time = (sleep_time > diff) ? diff : sleep_time;
                 }
             }
@@ -186,7 +186,7 @@ void scl_coroutine_init() {
     }
 }
 
-void scl_coroutine_sleep(uint64_t ms) {
+void scl_coroutine_sleep(size_t ms) {
     scl_coroutine_t *c = &scl_coroutines[scl_current_coroutine_pid];
     c->wake_at = scl_ms() + ms;
     c->status = 's';
