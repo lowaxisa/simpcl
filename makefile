@@ -7,7 +7,7 @@ d ?= tests
 # executable name
 o ?= executable
 
-COMPILE = $(CXX) $(d)/$(f) -I include/simpcl -o .temp/$(o)
+COMPILE = $(CXX) $(d)/$(f) -I include/simpcl -o .temp/$(o) -Wshadow
 
 all:
 	@mkdir -p .temp

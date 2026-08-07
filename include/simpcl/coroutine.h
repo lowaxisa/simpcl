@@ -14,15 +14,23 @@
 
 #define STACK_SIZE 128 * 1024
 #define MAX_COROUTINES 256
+#define MAX_MESSAGE 16
+
+typedef struct scl_coroutine_message {
+    uint16_t pid; // the coroutine was send
+    uint16_t signal; // for control
+    void *source;
+    bool_t occupied;
+} scl_coroutine_message;
 
 struct scl_coroutine_t;
 typedef struct scl_coroutine_t {
-    uint16_t pid;
     char status; // r = running, c = closed, s = sleeping
     uint64_t wake_at; // wake if time > wake_at (in ms)
     ucontext_t ctx;
     void *stack;
     void (*routine)();
+    scl_coroutine_message msg[MAX_MESSAGE];
 } scl_coroutine_t;
 
 // global vars
@@ -34,21 +42,22 @@ static scl_coroutine_t scl_coroutines[MAX_COROUTINES];
 static bool_t scl_coroutine_inited = false;
 
 // helpers
-scl_coroutine_t *scl_coroutine_find(uint16_t pid) {
-    for (uint16_t i = 0; i < MAX_COROUTINES; i++) {
-        if (scl_coroutines[i].pid == pid && scl_coroutines[i].stack != NULL) {
-            return &scl_coroutines[i];
-        }
+scl_coroutine_t *scl_coroutine_find(uint16_t pid) { // return coroutine if is alive
+    if (pid >= MAX_COROUTINES) return NULL;
+
+    if (scl_coroutines[pid].stack != NULL) {
+        return &scl_coroutines[pid];
     }
     return NULL;
 }
 
-uint16_t scl_coroutine_unused_pid() { // return coroutine if is alive
+uint16_t scl_coroutine_unused_pid() {
     for (uint16_t i = 0; i < MAX_COROUTINES; i++) {
         if (!scl_coroutines[i].stack) {
             return i;
         }
     }
+    return 0xFFFF;
 }
 
 // logic
@@ -56,7 +65,7 @@ void scl_coroutine_gc() {
     for (uint16_t i = 0; i < MAX_COROUTINES; i++) {
         scl_coroutine_t *c = &scl_coroutines[i];
 
-        if (c->stack && c->status == 'c' && c->pid != scl_current_coroutine_pid) {
+        if (c->stack && c->status == 'c' && i != scl_current_coroutine_pid) {
             free(c->stack);
             c->stack = NULL;
         }
@@ -68,13 +77,12 @@ bool_t scl_coroutine_scheduler() {
     uint16_t curr_index = 0;
     for (uint16_t i = 0; i < MAX_COROUTINES; i++) {
         scl_coroutine_t *c = &scl_coroutines[i];
-        if (!c) continue;
 
         if (c->status == 'r' || c->status == 's') {
             has_coroutines_alive = true;
         }
 
-        if (c->pid == scl_current_coroutine_pid) curr_index = i;
+        if (i == scl_current_coroutine_pid) curr_index = i;
     }
 
     if (!has_coroutines_alive) return false;
@@ -101,7 +109,7 @@ bool_t scl_coroutine_scheduler() {
 
             if (c->status == 'r') {
                 next_coroutine_find = true;
-                scl_next_coroutine_pid = c->pid;
+                scl_next_coroutine_pid = index;
                 break;
             }
         }
@@ -147,7 +155,6 @@ uint16_t scl_coroutine_summon(void (*routine)()) {
     uint16_t pid = scl_coroutine_unused_pid();
     scl_coroutine_t *c = &scl_coroutines[pid];
 
-    c->pid     = pid;
     c->status  = 'r';
     c->wake_at = 0;
     c->stack   = malloc(STACK_SIZE);
@@ -161,7 +168,7 @@ uint16_t scl_coroutine_summon(void (*routine)()) {
     c->ctx.uc_link = NULL;
 
     makecontext(&c->ctx, scl_coroutine_entry, 0);
-    return c->pid;
+    return pid;
 }
 
 void scl_coroutine_init() {
@@ -184,6 +191,26 @@ void scl_coroutine_sleep(uint64_t ms) {
     c->wake_at = scl_ms() + ms;
     c->status = 's';
     scl_coroutine_yield();
+}
+
+char scl_coroutine_send(uint16_t pid, uint16_t signal, void *source) { // s = success, f = target is full, n = target is null, y = is you
+    if (pid == scl_current_coroutine_pid) return 'y';
+
+    scl_coroutine_t *target = scl_coroutine_find(pid);
+
+    if (!target) return 'n';
+
+    for (uint16_t i = 0; i < MAX_MESSAGE; i++) {
+        if (!target->msg[i].occupied) {
+            target->msg[i].occupied = true;
+            target->msg[i].pid = scl_current_coroutine_pid;
+            target->msg[i].signal = signal;
+            target->msg[i].source = source;
+            return 's';
+        }
+    }
+
+    return 'f';
 }
 
 #endif
