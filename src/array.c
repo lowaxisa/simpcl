@@ -133,17 +133,22 @@ bool_t scl_array_compare(const scl_array_t *a, const scl_array_t *b, bool_t (*ca
 }
 
 void scl_array_sort(scl_array_t *a, bool_t (*callback)(void *a, void *b), void *buffer) {
-    while (true) {
-        bool_t swaped = false;
+    size_t distance = (size_t) a->length / 2;
+    bool_t swaped = false;
 
-        for (size_t j = 0; j + 1 < a->length; j++) {
-            if (callback(scl_array_at(a, j), scl_array_at(a, j + 1))) {
-                scl_array_swap(a, j, j + 1, buffer);
+    while (swaped || distance > 1) {
+        distance = (size_t) distance / 1.3;
+
+        if (distance < 1) distance = 1;
+
+        swaped = false;
+
+        for (size_t j = 0; j + distance < a->length; j++) {
+            if (callback(scl_array_at(a, j), scl_array_at(a, j + distance))) {
+                scl_array_swap(a, j, j + distance, buffer);
                 swaped = true;
             }
         }
-
-        if (!swaped) return;
     }
 }
 

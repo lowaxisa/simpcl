@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 CC := gcc
 
 # target file
@@ -40,5 +41,6 @@ run:
 	@printf "\n\033[2A> running...   \r\n"
 	@sleep 0.4
 	@echo
-	./$(C_OUT)
+	# you need the package time
+	/usr/bin/time -f "runtime: %E" ./$(C_OUT)
 	@echo
