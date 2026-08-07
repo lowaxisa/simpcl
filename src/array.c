@@ -72,6 +72,10 @@ scl_array_t *scl_array_copy(const scl_array_t *a, void (*callback)(void *a, void
     return temp;
 }
 
+void scl_array_grow(scl_array_t *array, size_t needed) {
+    while (array->capacity < needed) scl_array_realloc(array, array->capacity * 2);
+}
+
 
 
 // control
@@ -103,12 +107,12 @@ void scl_array_remove(scl_array_t *a, size_t index, void *dest) {
     if (index == a->length - 1) {scl_array_pop(a, dest); return;}
     if (dest) memcpy(dest, scl_array_at(a, index), a->element_size);
 
+    memmove(scl_array_at(a, index), scl_array_at(a, index + 1), (a->length - index - 1) * a->element_size);
     a->length--;
-    memmove(scl_array_at(a, index), scl_array_at(a, index + 1), (a->length - index) * a->element_size);
 }
 
 void scl_array_insert(scl_array_t *a, size_t index, void *source) {
-    scl_array_push(a, source);
+    scl_array_grow(a, ++a->length);
     memmove(scl_array_at(a, index + 1), scl_array_at(a, index), ((a->length - 1) - index) * a->element_size);
     memcpy(scl_array_at(a, index), source, a->element_size);
 }
@@ -116,6 +120,29 @@ void scl_array_insert(scl_array_t *a, size_t index, void *source) {
 void scl_array_foreach(scl_array_t *a, void (*callback)(void *data)) {
     for (size_t i = 0; i < a->length; i++) {
         callback(scl_array_at(a, i));
+    }
+}
+
+void *scl_array_find(scl_array_t *array, void *context, bool_t (*callback)(void *element, void *context)) {
+    for (size_t i = 0; i < array->length; i++) {
+        void *element = scl_array_at(array, i);
+        if (callback(element, context)) return element;
+    }
+    return NULL;
+}
+
+void scl_array_append(scl_array_t *array, scl_array_t *source, void (*callback)(void *a, void *b)) {
+    size_t array_length = array->length;
+    size_t source_length = source->length;
+
+    array->length = array_length + source_length;
+    scl_array_grow(array, array->length);
+
+    memcpy(scl_array_at(array, array_length), source->source, source_length * array->element_size);
+
+    if (!callback) return;
+    for (size_t i = array_length; i < array->length; i++) {
+        callback(scl_array_at(array, i), scl_array_at(source, i - array_length));
     }
 }
 

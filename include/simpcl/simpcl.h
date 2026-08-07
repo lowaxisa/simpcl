@@ -7,5 +7,6 @@
 #include "coroutine.h"
 #include "misc.h"
 #include "array.h"
+#include "string.h"
 
 #endif
