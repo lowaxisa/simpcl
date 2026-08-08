@@ -8,13 +8,22 @@ d ?= tests
 # executable name
 o ?= executable
 
-C_FLAGS := -Wshadow -Wall -Wextra
+C_FLAGS := -Wshadow -Wall -Wextra -ldl
 C_SOURCES = $(d)/$(f) $(wildcard src/*.c)
 C_OUT := .temp/$(o)
 COMPILE = $(CC) $(C_SOURCES) -I include -o $(C_OUT) $(C_FLAGS)
 
-.PHONY: all init compile run
-all: init compile run
+MODULES_SOURCES = $(wildcard $(d)/m_*.c)
+MODULES_SO = $(patsubst $(d)/%.c, .temp/%.so, $(MODULES_SOURCES))
+
+.PHONY: all init modules compile run
+all: init modules compile run
+
+.temp/%.so: $(d)/%.c
+	@mkdir -p .temp
+	gcc -fPIC -shared $< -I include -o $@
+
+modules: $(MODULES_SO)
 
 init:
 	@echo "--- simpcl build system ---"
@@ -42,5 +51,5 @@ run:
 	@sleep 0.4
 	@echo
 	# you need the package time
-	/usr/bin/time -f "runtime: %E" ./$(C_OUT)
+	cd .temp && /usr/bin/time -f "runtime: %E" ./$(o)
 	@echo

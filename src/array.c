@@ -127,7 +127,7 @@ void scl_array_foreach(scl_array_t *a, void (*callback)(void *data)) {
     }
 }
 
-void *scl_array_find(scl_array_t *array, void *context, bool_t (*callback)(void *element, void *context)) {
+void *scl_array_find(scl_array_t *array, void *context, bool (*callback)(void *element, void *context)) {
     for (size_t i = 0; i < array->length; i++) {
         void *element = scl_array_at(array, i);
         if (callback(element, context)) return element;
@@ -153,7 +153,7 @@ void scl_array_append(scl_array_t *array, scl_array_t *source, void (*callback)(
 
 
 // logic
-bool_t scl_array_compare(const scl_array_t *a, const scl_array_t *b, bool_t (*callback)(void *a, void *b)) {
+bool scl_array_compare(const scl_array_t *a, const scl_array_t *b, bool (*callback)(void *a, void *b)) {
     if (a->length != b->length) return false;
 
     for (size_t i = 0; i < a->length; i++) {
@@ -163,9 +163,9 @@ bool_t scl_array_compare(const scl_array_t *a, const scl_array_t *b, bool_t (*ca
     return true;
 }
 
-void scl_array_sort(scl_array_t *a, bool_t (*callback)(void *a, void *b), void *buffer) {
+void scl_array_sort(scl_array_t *a, bool (*callback)(void *a, void *b), void *buffer) {
     size_t distance = (size_t) a->length / 2;
-    bool_t swaped = false;
+    bool swaped = false;
 
     while (swaped || distance > 1) {
         distance = (size_t) distance / 1.3;

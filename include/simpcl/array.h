@@ -28,12 +28,12 @@ void scl_array_swap(scl_array_t *a, size_t index, size_t target, void *buffer);
 void scl_array_remove(scl_array_t *a, size_t index, void *dest);
 void scl_array_insert(scl_array_t *a, size_t index, void *source);
 void scl_array_foreach(scl_array_t *a, void (*callback)(void *data));
-void *scl_array_find(scl_array_t *array, void *context, bool_t (*callback)(void *element, void *context));
+void *scl_array_find(scl_array_t *array, void *context, bool (*callback)(void *element, void *context));
 void scl_array_append(scl_array_t *array, scl_array_t *source, void (*callback)(void *a, void *b));
 
 // logic
-bool_t scl_array_compare(const scl_array_t *a, const scl_array_t *b, bool_t (*callback)(void *a, void *b));
-void scl_array_sort(scl_array_t *a, bool_t (*callback)(void *a, void *b), void *buffer);
+bool scl_array_compare(const scl_array_t *a, const scl_array_t *b, bool (*callback)(void *a, void *b));
+void scl_array_sort(scl_array_t *a, bool (*callback)(void *a, void *b), void *buffer);
 
 // getters
 size_t scl_array_length(const scl_array_t *a);

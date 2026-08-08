@@ -5,7 +5,7 @@ void cb(void *e) {
     printf("%X", *(int *) e);
 }
 
-bool_t sort_cb(void *a, void *b) {
+bool sort_cb(void *a, void *b) {
     return *(int *) a > *(int *) b;
 }
 
@@ -19,11 +19,11 @@ void feach_cb(void *d) {
     printf("%d ", *(int *) d);
 }
 
-bool_t cmp_cb(void *a, void *b) {
+bool cmp_cb(void *a, void *b) {
     return *(int *) a == *(int *) b;
 }
 
-bool_t find_cb(void *d, void *e) {
+bool find_cb(void *d, void *e) {
     return *(int *) d == *(int *) e;
 }
 

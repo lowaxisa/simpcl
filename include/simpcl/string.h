@@ -20,8 +20,8 @@ void scl_string_cappend(scl_string_t *string, const char *c_str);
 void scl_string_append(scl_string_t *string, scl_string_t *source);
 
 // logic
-bool_t scl_string_compare(scl_string_t *string, scl_string_t *other);
-bool_t scl_string_ccompare(scl_string_t *string, const char *c_str);
+bool scl_string_compare(scl_string_t *string, scl_string_t *other);
+bool scl_string_ccompare(scl_string_t *string, const char *c_str);
 size_t scl_string_find(scl_string_t *string, scl_string_t *target, size_t ignore);
 size_t scl_string_cfind(scl_string_t *string, const char *c_str, size_t ignore);
 

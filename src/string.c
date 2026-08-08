@@ -51,19 +51,19 @@ scl_string_t *scl_string_copy(scl_string_t *string) {
 
 
 // logic
-static bool_t string_compare_callback(void *a, void *b) {
+static bool string_compare_callback(void *a, void *b) {
     return *(char *) a == *(char *) b;
 }
 
-bool_t scl_string_compare(scl_string_t *string, scl_string_t *other) {
+bool scl_string_compare(scl_string_t *string, scl_string_t *other) {
     return scl_array_compare(string->source, other->source, string_compare_callback);
 }
 
-bool_t scl_string_ccompare(scl_string_t *string, const char *c_str) {
+bool scl_string_ccompare(scl_string_t *string, const char *c_str) {
     scl_string_t *temp = scl_string_new();
 
     scl_string_cappend(temp, c_str);
-    bool_t result = scl_string_compare(string, temp);
+    bool result = scl_string_compare(string, temp);
     scl_string_destroy(temp);
 
     return result;

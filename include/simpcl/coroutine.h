@@ -4,6 +4,7 @@
 #include <ucontext.h>
 #include <setjmp.h>
 #include <time.h>
+#include <dlfcn.h>
 #include <stdlib.h>
 #include "types.h"
 #include "misc.h"
@@ -20,7 +21,7 @@ typedef struct scl_coroutine_message {
     uint16_t pid; // the coroutine was send
     uint16_t signal; // for control
     void *source;
-    bool_t occupied;
+    bool occupied;
 } scl_coroutine_message;
 
 struct scl_coroutine_t;
@@ -39,7 +40,8 @@ static ucontext_t scl_context; // main context
 static uint16_t scl_current_coroutine_pid = 0xFFFF;
 static uint16_t scl_next_coroutine_pid = 0xFFFF;
 static scl_coroutine_t scl_coroutines[MAX_COROUTINES];
-static bool_t scl_coroutine_inited = false;
+static void *scl_coroutines_handle[MAX_COROUTINES]; // for modules .so
+static bool scl_coroutine_inited = false;
 
 // helpers
 scl_coroutine_t *scl_coroutine_find(uint16_t pid) { // return coroutine if is alive
@@ -68,12 +70,18 @@ void scl_coroutine_gc() {
         if (c->stack && c->status == 'c' && i != scl_current_coroutine_pid) {
             free(c->stack);
             c->stack = NULL;
+
+            void *handle = scl_coroutines_handle[i];
+            if (handle) {
+                dlclose(handle);
+                scl_coroutines_handle[i] = NULL;
+            }
         }
     }
 }
 
-bool_t scl_coroutine_scheduler() {
-    bool_t has_coroutines_alive = false;
+bool scl_coroutine_scheduler() {
+    bool has_coroutines_alive = false;
     uint16_t curr_index = 0;
     for (uint16_t i = 0; i < MAX_COROUTINES; i++) {
         scl_coroutine_t *c = &scl_coroutines[i];
@@ -88,7 +96,7 @@ bool_t scl_coroutine_scheduler() {
     if (!has_coroutines_alive) return false;
 
     while (true) {
-        bool_t next_coroutine_find = false;
+        bool next_coroutine_find = false;
         size_t sleep_time = 0xFFFFFFFF;
         size_t current_time = scl_ms();
 
@@ -211,6 +219,29 @@ char scl_coroutine_send(uint16_t pid, uint16_t signal, void *source) { // s = su
     }
 
     return 'f';
+}
+
+uint16_t scl_coroutine_load(const char *module) {
+    void *handle = dlopen(module, RTLD_LAZY);
+
+    if (!handle) {
+        printf("[scl_coroutine_load] dlopen error: %s\n", dlerror());
+        return 0xFFFF;
+    }
+    
+    dlerror();
+    void (*routine)();
+    routine = (void (*)()) dlsym(handle, "routine");
+
+    char *error = dlerror();
+    if (error != NULL) {
+        dlclose(handle);
+        return 0xFFFF;
+    }
+
+    uint16_t pid = scl_coroutine_summon(routine);
+    scl_coroutines_handle[pid] = handle;
+    return pid;
 }
 
 #endif
