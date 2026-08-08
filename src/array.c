@@ -76,6 +76,10 @@ void scl_array_grow(scl_array_t *array, size_t needed) {
     while (array->capacity < needed) scl_array_realloc(array, array->capacity * 2);
 }
 
+void scl_array_clear(scl_array_t *array) {
+    array->length = 0;
+}
+
 
 
 // control

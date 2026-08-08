@@ -19,6 +19,7 @@ void scl_array_shrink(scl_array_t *a);
 void *scl_array_at(const scl_array_t *a, size_t index);
 scl_array_t *scl_array_copy(const scl_array_t *a, void (*callback)(void *a, void *b));
 void scl_array_grow(scl_array_t *array, size_t needed);
+void scl_array_clear(scl_array_t *array);
 
 // control
 void scl_array_push(scl_array_t *a, void *source);
