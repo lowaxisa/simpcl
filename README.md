@@ -6,5 +6,5 @@ A lightweight library for C
 
 - [x] coroutines
 - [x] dynamic arrays
-- [ ] strings
+- [x] strings
 - [ ] map

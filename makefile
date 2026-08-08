@@ -30,12 +30,12 @@ compile:
 
 run:
 	@echo
-	@for i in $$(seq 1 1); do \
-		sub=$$(expr 2 - $$i); \
+	@for i in $$(seq 1 9); do \
+		sub=$$(expr 10 - $$i); \
 		echo -e "\033[2A"; \
 		echo -ne "> running in $$sub\r"; \
 		echo; \
-		sleep 1; \
+		sleep 0.1; \
 	done;
 
 	@printf "\n\033[2A> running...   \r\n"
